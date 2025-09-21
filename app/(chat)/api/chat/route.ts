@@ -26,6 +26,7 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
+import { validateYouTubeLink } from "@/lib/ai/tools/validate-youtube-link";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -188,6 +189,7 @@ export async function POST(request: Request) {
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
+                  "validateYouTubeLink",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -198,6 +200,7 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            validateYouTubeLink,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
