@@ -23,6 +23,7 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { fetchYouTubeVideos } from "@/lib/ai/tools/fetch-youtube-videos";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
@@ -190,6 +191,7 @@ export async function POST(request: Request) {
                   "updateDocument",
                   "requestSuggestions",
                   "validateYouTubeLink",
+                  "fetchYouTubeVideos",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -201,6 +203,7 @@ export async function POST(request: Request) {
               dataStream,
             }),
             validateYouTubeLink,
+            fetchYouTubeVideos,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

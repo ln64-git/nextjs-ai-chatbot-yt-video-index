@@ -16,10 +16,8 @@ export const validateYouTubeLink = tool({
   }),
   execute: ({ message }: { message: string }) => {
     try {
-      console.log("🔍 validateYouTubeLink tool called with message:", message);
       // Check if the message contains any YouTube links
       const hasChannelLink = isYouTubeChannelLink(message);
-      console.log("🔍 hasChannelLink result:", hasChannelLink);
 
       if (!hasChannelLink) {
         return {
@@ -31,7 +29,6 @@ export const validateYouTubeLink = tool({
 
       // Get the first valid channel link
       const channelLink = getFirstChannelLink(message);
-      console.log("🔍 channelLink result:", channelLink);
 
       if (!channelLink) {
         return {

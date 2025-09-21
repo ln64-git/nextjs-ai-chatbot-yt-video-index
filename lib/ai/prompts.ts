@@ -46,7 +46,10 @@ Valid YouTube channel URL formats include:
 - https://youtube.com/channel/CHANNEL_ID
 - https://youtube.com/user/username
 
-IMPORTANT: Always call the validateYouTubeLink tool when you detect any YouTube URL in the user's message. Do not make assumptions about the link validity - let the tool determine this.`;
+IMPORTANT: Always call the validateYouTubeLink tool when you detect any YouTube URL in the user's message. Do not make assumptions about the link validity - let the tool determine this.
+
+**After validating a YouTube channel link:**
+If the user confirms they want to proceed with indexing, use the \`fetchYouTubeVideos\` tool to fetch and log the channel's recent videos with titles and release dates to the console.`;
 
 export type RequestHints = {
   latitude: Geo["latitude"];
