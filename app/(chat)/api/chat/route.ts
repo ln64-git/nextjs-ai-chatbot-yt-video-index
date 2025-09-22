@@ -23,6 +23,7 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { extractVideoKeywords } from "@/lib/ai/tools/extract-video-keywords";
 import { fetchYouTubeTranscript } from "@/lib/ai/tools/fetch-youtube-transcript";
 import { fetchYouTubeVideos } from "@/lib/ai/tools/fetch-youtube-videos";
 import { getWeather } from "@/lib/ai/tools/get-weather";
@@ -201,6 +202,7 @@ export async function POST(request: Request) {
                   "validateYouTubeLink",
                   "fetchYouTubeVideos",
                   "fetchYouTubeTranscript",
+                  "extractVideoKeywords",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -214,6 +216,7 @@ export async function POST(request: Request) {
             validateYouTubeLink,
             fetchYouTubeVideos,
             fetchYouTubeTranscript,
+            extractVideoKeywords,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

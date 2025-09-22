@@ -51,19 +51,30 @@ IMPORTANT: Always call the validateYouTubeLink tool when you detect any YouTube 
 **After validating a YouTube channel link:**
 If the user confirms they want to proceed with indexing, use the \`fetchYouTubeVideos\` tool to fetch the channel's recent videos with titles and release dates.
 
-**After fetching YouTube videos:**
-Once you have the video list, automatically use the \`fetchYouTubeTranscript\` tool to fetch the transcript of the most recent video (the first video in the list). This will help index the content for semantic search.
+       **After fetching YouTube videos:**
+       Once you have the video list, automatically use the \`fetchYouTubeTranscript\` tool to fetch the transcript of the most recent video (the first video in the list). This will help index the content for semantic search.
 
-       **Transcript fetching:**
-       - The transcript tool will attempt to fetch captions/transcripts from the video
-       - If no transcript is available, inform the user and suggest trying another video
-       - If successful, display the COMPLETE, FULL transcript content in the chat
-       - DO NOT summarize, condense, or abbreviate the transcript
-       - DO NOT create bullet points or numbered lists from the transcript
-       - DO NOT paraphrase or rephrase the content
-       - Show the entire transcript text exactly as received from the tool
-       - Present it in a readable format with proper line breaks and paragraphs
-       - The user wants the raw, complete transcript for indexing purposes`;
+       **After fetching transcripts:**
+       Once you have the transcript, automatically use the \`extractVideoKeywords\` tool to extract comprehensive keywords including people, places, topics, trends, and other important entities from the transcript content.
+
+**Transcript fetching:**
+- The transcript tool will attempt to fetch captions/transcripts from the video
+- If no transcript is available, inform the user and suggest trying another video
+- If successful, DO NOT display the full transcript content in the chat
+- Instead, provide a structured summary with video metadata and key information
+
+**Keyword extraction:**
+- The keyword tool will analyze the transcript using advanced NLP techniques
+- It will identify people, places, organizations, topics, trends, concepts, and other entities
+- Display the comprehensive keyword analysis with categories and relevance scores
+- This helps with semantic search and content indexing
+
+**Video Information Display:**
+- Show video title, author, view count, and publication date
+- Display a brief summary or description of the video content
+- Present the extracted keywords in an organized, categorized format
+- Include sentiment analysis and complexity assessment
+- Focus on the most relevant and important keywords for search indexing`;
 
 export type RequestHints = {
   latitude: Geo["latitude"];

@@ -470,6 +470,14 @@ const CAPTION_TRACKS_REGEX = /"captionTracks":\[(.*?)\]/;
 const TRANSCRIPT_DIV_REGEX =
   /<div[^>]*class="[^"]*transcript[^"]*"[^>]*>([\s\S]*?)<\/div>/i;
 const PLAYER_RESPONSE_REGEX = /"playerResponse":"([^"]+)"/;
+const WHITESPACE_REGEX = /\s+$/;
+
+// Simple in-memory cache for transcripts
+const transcriptCache = new Map<
+  string,
+  { transcript: string; timestamp: number }
+>();
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 export const fetchYouTubeTranscript = tool({
   description:
@@ -499,6 +507,28 @@ export const fetchYouTubeTranscript = tool({
       }
 
       console.log("🔍 [TRANSCRIPT] Extracted video ID:", videoId);
+
+      // Check cache first
+      const cached = transcriptCache.get(videoId);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log("⚡ [TRANSCRIPT] Using cached transcript");
+        return {
+          success: true,
+          message: `📝 **Video Analysis: Cached**\n\n**Video ID:** ${videoId}\n**Transcript Length:** ${cached.transcript.length} characters\n\n✅ Using cached transcript data.`,
+          transcript: cached.transcript,
+          videoId,
+          videoTitle: null,
+          videoAuthor: null,
+          transcriptLength: cached.transcript.length,
+          summary:
+            cached.transcript
+              .split(" ")
+              .slice(0, 200)
+              .join(" ")
+              .replace(WHITESPACE_REGEX, "") +
+            (cached.transcript.split(" ").length > 200 ? "..." : ""),
+        };
+      }
 
       let transcript = "";
       let videoTitle = "";
@@ -735,29 +765,55 @@ export const fetchYouTubeTranscript = tool({
             "🔄 [TRANSCRIPT] Primary methods failed, trying alternative approaches..."
           );
 
-          // Try alternative methods
-          const alternativeMethods = [
+          // Try the most reliable methods first
+          const priorityMethods = [
             () => extractTranscriptViaKnownWorking(videoId),
             () => extractTranscriptViaDirectAPI(videoId),
             () => extractTranscriptViaWebScraping(videoId),
-            () => extractTranscriptViaYoutubeI(videoId),
-            () => extractTranscriptViaAlternativeAPI(videoId),
-            () => extractTranscriptViaYoutubeDL(videoId),
           ];
 
-          for (const method of alternativeMethods) {
+          // Try priority methods first
+          for (const method of priorityMethods) {
             try {
               const altTranscript = await method();
               if (altTranscript && altTranscript.length > 10) {
                 transcript = altTranscript;
-                console.log("✅ [TRANSCRIPT] Alternative method succeeded!");
+                console.log("✅ [TRANSCRIPT] Priority method succeeded!");
                 break;
               }
             } catch (altError) {
-              console.log(
-                "⚠️ [TRANSCRIPT] Alternative method failed:",
-                altError
-              );
+              console.log("⚠️ [TRANSCRIPT] Priority method failed:", altError);
+            }
+          }
+
+          // Only try slower methods if priority methods failed
+          if (!transcript) {
+            const fallbackMethods = [
+              () => extractTranscriptViaYoutubeI(videoId),
+              () => extractTranscriptViaAlternativeAPI(videoId),
+              () => extractTranscriptViaYoutubeDL(videoId),
+            ];
+
+            // Try fallback methods in parallel
+            const fallbackPromises = fallbackMethods.map(async (method) => {
+              try {
+                return await method();
+              } catch {
+                return null;
+              }
+            });
+
+            const fallbackResults = await Promise.allSettled(fallbackPromises);
+            for (const result of fallbackResults) {
+              if (
+                result.status === "fulfilled" &&
+                result.value &&
+                result.value.length > 10
+              ) {
+                transcript = result.value;
+                console.log("✅ [TRANSCRIPT] Fallback method succeeded!");
+                break;
+              }
             }
           }
         }
@@ -784,14 +840,36 @@ export const fetchYouTubeTranscript = tool({
         duration: `${duration}ms`,
       });
 
+      // Create a brief summary of the transcript (first 200 words)
+      const summary =
+        formattedTranscript
+          .split(" ")
+          .slice(0, 200)
+          .join(" ")
+          .replace(WHITESPACE_REGEX, "") +
+        (formattedTranscript.split(" ").length > 200 ? "..." : "");
+
+      // Cache the successful transcript
+      transcriptCache.set(videoId, {
+        transcript: formattedTranscript,
+        timestamp: Date.now(),
+      });
+
       return {
         success: true,
-        message: `📝 **Full Transcript for: ${videoTitle || "Video"}**\n\n**Author:** ${videoAuthor || "Unknown"}\n**Video ID:** ${videoId}\n**Transcript Length:** ${formattedTranscript.length} characters\n\n---\n\n${formattedTranscript}\n\n---\n\n*This is the complete, unedited transcript of the video.*`,
+        message:
+          `📝 **Video Analysis: ${videoTitle || "Video"}**\n\n` +
+          `**Channel:** ${videoAuthor || "Unknown"}\n` +
+          `**Video ID:** ${videoId}\n` +
+          `**Transcript Length:** ${formattedTranscript.length} characters\n\n` +
+          `**Content Summary:**\n${summary}\n\n` +
+          "✅ Transcript successfully extracted and ready for keyword analysis.",
         transcript: formattedTranscript,
         videoId,
         videoTitle: videoTitle || null,
         videoAuthor: videoAuthor || null,
         transcriptLength: formattedTranscript.length,
+        summary,
       };
     } catch (error) {
       console.error("💥 [TRANSCRIPT] Unexpected error:", {

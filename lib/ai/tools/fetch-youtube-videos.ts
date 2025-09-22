@@ -200,13 +200,14 @@ async function fetchRealYouTubeVideos(channelId: string, apiKey: string) {
       return [];
     }
 
+    // Return only essential data for speed
     return videoDetailsResponse.data.items.map((video) => ({
       title: video.snippet?.title || "Unknown Title",
       publishedAt: video.snippet?.publishedAt || "Unknown Date",
       url: `https://www.youtube.com/watch?v=${video.id}`,
       viewCount: Number.parseInt(video.statistics?.viewCount || "0", 10),
-      description: video.snippet?.description || "",
-      thumbnail: video.snippet?.thumbnails?.high?.url || "",
+      description: (video.snippet?.description || "").substring(0, 100), // Truncate description
+      thumbnail: video.snippet?.thumbnails?.medium?.url || "", // Use medium instead of high
     }));
   } catch (error) {
     console.error("Error fetching real YouTube videos:", error);
@@ -225,23 +226,18 @@ function logVideosAndReturn(videos: any[], _channelUrl: string) {
     };
   }
 
-  // Format videos for chat display
-  const videoList = videos
-    .map(
-      (video, index) =>
-        `${index + 1}. **${video.title}**\n` +
-        `   📅 Released: ${video.publishedAt}\n` +
-        `   🔗 URL: ${video.url}\n` +
-        `   📊 Views: ${video.viewCount.toLocaleString()}\n` +
-        (video.description
-          ? `   📝 Description: ${video.description.substring(0, 100)}...\n`
-          : "")
-    )
-    .join("\n");
+  // Format videos for chat display (removed as we now show structured summary)
 
   return {
     success: true,
-    message: `📋 **Recent videos from channel:**\n\n${videoList}\n\n✅ Found ${videos.length} videos. Ready to fetch transcript for the most recent video.`,
+    message:
+      "📋 **Channel Analysis Complete**\n\n" +
+      `**Channel:** ${videos[0]?.channelTitle || "Unknown"}\n` +
+      `**Videos Found:** ${videos.length}\n` +
+      `**Most Recent Video:** ${videos[0]?.title || "Unknown"}\n` +
+      `**Published:** ${videos[0]?.publishedAt || "Unknown"}\n` +
+      `**Views:** ${videos[0]?.viewCount?.toLocaleString() || "Unknown"}\n\n` +
+      "✅ Ready to analyze the most recent video's transcript and extract keywords.",
     videoCount: videos.length,
     videos,
     mostRecentVideo: videos[0], // Return the most recent video for transcript fetching
