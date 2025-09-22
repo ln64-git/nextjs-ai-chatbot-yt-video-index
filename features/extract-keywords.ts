@@ -15,14 +15,16 @@ export type KeywordExtractionResult = {
   totalCount: number;
 };
 
+// Cache the NER pipeline to avoid reloading it every time
+let cachedNer: any = null;
+
 export async function extractKeywordsFromTranscript(
   transcript: string
 ): Promise<KeywordExtractionResult> {
-  console.log(
-    `🔍 [NER] Starting keyword extraction for ${transcript.length} characters`
-  );
-
-  const ner = await pipeline("ner", "Xenova/bert-base-NER");
+  if (!cachedNer) {
+    cachedNer = await pipeline("ner", "Xenova/bert-base-NER");
+  }
+  const ner = cachedNer;
 
   // Process transcript in chunks to avoid length limitations
   const chunkSize = 1000;
@@ -31,10 +33,6 @@ export async function extractKeywordsFromTranscript(
   for (let i = 0; i < transcript.length; i += chunkSize) {
     chunks.push(transcript.slice(i, i + chunkSize));
   }
-
-  console.log(
-    `🔍 [NER] Processing ${chunks.length} chunks of ${chunkSize} characters each`
-  );
 
   let allResults: any[] = [];
   for (const chunkText of chunks) {

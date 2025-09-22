@@ -22,12 +22,16 @@ import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
+import { checkDatabaseStatus } from "@/lib/ai/tools/check-database-status";
 import { createDocument } from "@/lib/ai/tools/create-document";
-import { extractVideoKeywords } from "@/lib/ai/tools/extract-video-keywords";
 import { fetchYouTubeTranscript } from "@/lib/ai/tools/fetch-youtube-transcript";
 import { fetchYouTubeVideos } from "@/lib/ai/tools/fetch-youtube-videos";
 import { getWeather } from "@/lib/ai/tools/get-weather";
+import { indexYouTubeChannel } from "@/lib/ai/tools/index-youtube-channel";
+import { regenerateEmbeddings } from "@/lib/ai/tools/regenerate-embeddings";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
+import { searchYouTubeContent } from "@/lib/ai/tools/search-youtube-content";
+import { testSearch } from "@/lib/ai/tools/test-search";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { validateYouTubeLink } from "@/lib/ai/tools/validate-youtube-link";
 import { isProductionEnvironment } from "@/lib/constants";
@@ -96,7 +100,10 @@ export async function POST(request: Request) {
     requestBody = postRequestBodySchema.parse(json);
     console.log("💬 [CHAT] New chat request:", {
       chatId: requestBody.id,
-      messageLength: requestBody.message.parts[0]?.text?.length || 0,
+      messageLength:
+        requestBody.message.parts[0]?.type === "text"
+          ? requestBody.message.parts[0].text.length
+          : 0,
       model: requestBody.selectedChatModel,
       visibility: requestBody.selectedVisibilityType,
     });
@@ -202,7 +209,11 @@ export async function POST(request: Request) {
                   "validateYouTubeLink",
                   "fetchYouTubeVideos",
                   "fetchYouTubeTranscript",
-                  "extractVideoKeywords",
+                  "indexYouTubeChannel",
+                  "searchYouTubeContent",
+                  "checkDatabaseStatus",
+                  "regenerateEmbeddings",
+                  "testSearch",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -216,7 +227,11 @@ export async function POST(request: Request) {
             validateYouTubeLink,
             fetchYouTubeVideos,
             fetchYouTubeTranscript,
-            extractVideoKeywords,
+            indexYouTubeChannel,
+            searchYouTubeContent,
+            checkDatabaseStatus,
+            regenerateEmbeddings,
+            testSearch,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

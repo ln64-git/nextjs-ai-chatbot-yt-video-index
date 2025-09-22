@@ -17,6 +17,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow debug endpoints without authentication
+  if (
+    pathname.startsWith("/api/youtube/debug") ||
+    pathname.startsWith("/api/youtube/fix-embeddings")
+  ) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
