@@ -1,10 +1,11 @@
 import { exec } from "node:child_process";
 import { mkdir, readdir, readFile, rmdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { tool } from "ai";
 import { promisify } from "node:util";
+import { tool } from "ai";
 import { YoutubeTranscript } from "youtube-transcript";
 import { z } from "zod";
+import { extractKeywordsFromTranscript } from "@/features/extract-keywords";
 
 const execAsync = promisify(exec);
 
@@ -57,12 +58,25 @@ export const fetchYouTubeTranscript = tool({
       const cached = transcriptCache.get(videoId);
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         console.log("⚡ [TRANSCRIPT] Using cached transcript");
+
+        // Extract keywords from cached transcript
+        console.log(
+          "🔍 [KEYWORDS] Extracting keywords from cached transcript..."
+        );
+        const keywordResult = await extractKeywordsFromTranscript(
+          cached.transcript
+        );
+        const keywordsDisplay = formatKeywordsForDisplay(keywordResult);
+
         return {
           success: true,
-          message: `📝 **Video Analysis: Cached**\n\n**Video ID:** ${videoId}\n**Transcript Length:** ${cached.transcript.length} characters\n\n✅ Using cached transcript data.`,
+          message: `📝 **Video Analysis: Cached**\n\n**Video ID:** ${videoId}\n**Transcript Length:** ${cached.transcript.length} characters\n\n🎯 **Key Topics & Keywords:**\n${keywordsDisplay}\n\n✅ Using cached data - ready for discussion!`,
           transcript: cached.transcript,
           videoId,
           transcriptLength: cached.transcript.length,
+          keywords: keywordResult.keywords,
+          groupedKeywords: keywordResult.groupedKeywords,
+          totalKeywords: keywordResult.totalCount,
           summary:
             cached.transcript.split(" ").slice(0, 200).join(" ") +
             (cached.transcript.split(" ").length > 200 ? "..." : ""),
@@ -124,14 +138,28 @@ export const fetchYouTubeTranscript = tool({
         `✅ [TRANSCRIPT] Successfully extracted transcript: ${transcript.length} characters`
       );
 
+      // Extract keywords from the transcript
+      console.log("🔍 [KEYWORDS] Starting keyword extraction...");
+      const keywordResult = await extractKeywordsFromTranscript(transcript);
+      console.log("✅ [KEYWORDS] Keyword extraction complete:", {
+        totalKeywords: keywordResult.totalCount,
+        topCategories: Object.keys(keywordResult.groupedKeywords),
+      });
+
+      // Format keywords for display
+      const keywordsDisplay = formatKeywordsForDisplay(keywordResult);
+
       return {
         success: true,
-        message: `📝 **Video Analysis Complete**\n\n**Video:** ${metadata.title}\n**Author:** ${metadata.author_name}\n**Video ID:** ${videoId}\n**Transcript Length:** ${transcript.length} characters\n\n✅ Transcript successfully extracted and ready for analysis.`,
+        message: `📝 **Video Analysis Complete**\n\n**Video:** ${metadata.title}\n**Author:** ${metadata.author_name}\n**Video ID:** ${videoId}\n**Transcript Length:** ${transcript.length} characters\n\n🎯 **Key Topics & Keywords:**\n${keywordsDisplay}\n\n✅ Analysis complete - ready for further discussion!`,
         transcript,
         videoId,
         videoTitle: metadata.title,
         videoAuthor: metadata.author_name,
         transcriptLength: transcript.length,
+        keywords: keywordResult.keywords,
+        groupedKeywords: keywordResult.groupedKeywords,
+        totalKeywords: keywordResult.totalCount,
         summary:
           transcript.split(" ").slice(0, 200).join(" ") +
           (transcript.split(" ").length > 200 ? "..." : ""),
@@ -292,4 +320,41 @@ async function parseSubtitleFile(
   }
 
   return transcript.length > 10 ? transcript : "";
+}
+
+// Helper function to format keywords for display
+function formatKeywordsForDisplay(keywordResult: {
+  keywords: Array<{ word: string; entity: string; score: number }>;
+  groupedKeywords: Record<
+    string,
+    Array<{ word: string; entity: string; score: number }>
+  >;
+  totalCount: number;
+}): string {
+  let display = `**Total Keywords Found:** ${keywordResult.totalCount}\n\n`;
+
+  // Show top keywords by category
+  const topCategories = Object.entries(keywordResult.groupedKeywords)
+    .sort(([, a], [, b]) => b.length - a.length)
+    .slice(0, 5);
+
+  for (const [category, keywords] of topCategories) {
+    if (keywords.length > 0) {
+      const topKeywords = keywords
+        .slice(0, 8)
+        .map((k) => k.word)
+        .join(", ");
+      display += `**${category.charAt(0).toUpperCase() + category.slice(1)}:** ${topKeywords}\n`;
+    }
+  }
+
+  // Show top overall keywords
+  const topKeywords = keywordResult.keywords
+    .slice(0, 15)
+    .map((k) => k.word)
+    .join(", ");
+
+  display += `\n**Top Keywords:** ${topKeywords}`;
+
+  return display;
 }

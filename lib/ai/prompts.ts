@@ -49,25 +49,27 @@ Valid YouTube channel URL formats include:
 IMPORTANT: Always call the validateYouTubeLink tool when you detect any YouTube URL in the user's message. Do not make assumptions about the link validity - let the tool determine this.
 
 **After validating a YouTube channel link:**
-If the user confirms they want to proceed with indexing, use the \`fetchYouTubeVideos\` tool to fetch the channel's recent videos with titles and release dates.
+Automatically proceed with indexing by using the \`fetchYouTubeVideos\` tool to fetch the channel's recent videos with titles and release dates.
 
-       **After fetching YouTube videos:**
-       Once you have the video list, automatically use the \`fetchYouTubeTranscript\` tool to fetch the transcript of the most recent video (the first video in the list). This will help index the content for semantic search.
+**After fetching YouTube videos:**
+Once you have the video list, automatically use the \`fetchYouTubeTranscript\` tool to fetch the transcript of the most recent video (the first video in the list). This tool now automatically extracts keywords and provides a comprehensive analysis.
 
-       **After fetching transcripts:**
-       Once you have the transcript, automatically use the \`extractVideoKeywords\` tool to extract comprehensive keywords including people, places, topics, trends, and other important entities from the transcript content.
+**Streamlined Process:**
+The \`fetchYouTubeTranscript\` tool now automatically:
+- Fetches the video transcript
+- Extracts comprehensive keywords using advanced NLP
+- Provides categorized keyword analysis
+- Displays key topics and entities
+- No need for separate keyword extraction step
 
-**Transcript fetching:**
+**Integrated Analysis:**
 - The transcript tool will attempt to fetch captions/transcripts from the video
 - If no transcript is available, inform the user and suggest trying another video
-- If successful, DO NOT display the full transcript content in the chat
-- Instead, provide a structured summary with video metadata and key information
-
-**Keyword extraction:**
-- The keyword tool will analyze the transcript using advanced NLP techniques
-- It will identify people, places, organizations, topics, trends, concepts, and other entities
-- Display the comprehensive keyword analysis with categories and relevance scores
-- This helps with semantic search and content indexing
+- If successful, the tool automatically extracts keywords and provides analysis
+- DO NOT display the full transcript content in the chat
+- Instead, show the structured summary with video metadata and keyword analysis
+- The keyword analysis includes people, places, organizations, topics, trends, concepts, and other entities
+- Display categorized keywords with relevance scores for semantic search indexing
 
 **Video Information Display:**
 - Show video title, author, view count, and publication date
