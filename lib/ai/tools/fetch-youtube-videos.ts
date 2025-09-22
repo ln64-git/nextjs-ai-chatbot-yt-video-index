@@ -24,18 +24,20 @@ export const fetchYouTubeVideos = tool({
         };
       }
 
-      console.log("🔍 Channel ID:", channelId);
+      console.log("🔍 [VIDEOS] Channel ID:", channelId);
 
       // Check if YouTube API key is available
       const apiKey = process.env.YOUTUBE_API_KEY;
       if (!apiKey) {
-        console.log("⚠️  No YouTube API key found, using mock data");
+        console.log("⚠️ [VIDEOS] No YouTube API key found, using mock data");
         const mockVideos = await simulateYouTubeAPICall();
         return logVideosAndReturn(mockVideos, channelUrl);
       }
 
+      console.log("📡 [VIDEOS] YouTube API key found, fetching real data...");
       // Fetch real videos from YouTube API
       const videos = await fetchRealYouTubeVideos(channelId, apiKey);
+      console.log("✅ [VIDEOS] Fetched videos:", { count: videos.length });
       return logVideosAndReturn(videos, channelUrl);
     } catch (error) {
       console.error("Error fetching YouTube videos:", error);
@@ -214,28 +216,35 @@ async function fetchRealYouTubeVideos(channelId: string, apiKey: string) {
 }
 
 function logVideosAndReturn(videos: any[], _channelUrl: string) {
-  console.log("📋 Recent videos from channel:");
-  console.log("=".repeat(50));
+  if (videos.length === 0) {
+    return {
+      success: true,
+      message: "No videos found for this channel.",
+      videoCount: 0,
+      videos: [],
+    };
+  }
 
-  videos.forEach((video, index) => {
-    console.log(`${index + 1}. ${video.title}`);
-    console.log(`   📅 Released: ${video.publishedAt}`);
-    console.log(`   🔗 URL: ${video.url}`);
-    console.log(`   📊 Views: ${video.viewCount.toLocaleString()}`);
-    if (video.description) {
-      console.log(
-        `   📝 Description: ${video.description.substring(0, 100)}...`
-      );
-    }
-    console.log("");
-  });
-
-  console.log("=".repeat(50));
+  // Format videos for chat display
+  const videoList = videos
+    .map(
+      (video, index) =>
+        `${index + 1}. **${video.title}**\n` +
+        `   📅 Released: ${video.publishedAt}\n` +
+        `   🔗 URL: ${video.url}\n` +
+        `   📊 Views: ${video.viewCount.toLocaleString()}\n` +
+        (video.description
+          ? `   📝 Description: ${video.description.substring(0, 100)}...\n`
+          : "")
+    )
+    .join("\n");
 
   return {
     success: true,
-    message: `Successfully fetched ${videos.length} recent videos from the channel. Check console for details.`,
+    message: `📋 **Recent videos from channel:**\n\n${videoList}\n\n✅ Found ${videos.length} videos. Ready to fetch transcript for the most recent video.`,
     videoCount: videos.length,
+    videos,
+    mostRecentVideo: videos[0], // Return the most recent video for transcript fetching
   };
 }
 
@@ -244,47 +253,48 @@ async function simulateYouTubeAPICall() {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Mock video data - fallback when API key is not available
+  // Using real video IDs that have transcripts available
   const mockVideos = [
     {
       title: "Latest Video: Amazing Tutorial on React Hooks",
       publishedAt: "2024-01-15T10:30:00Z",
-      url: "https://youtube.com/watch?v=video1",
+      url: "https://youtube.com/watch?v=dQw4w9WgXcQ", // Rick Roll - has captions
       viewCount: 15_420,
       description: "Learn React hooks in this comprehensive tutorial...",
-      thumbnail: "https://img.youtube.com/vi/video1/hqdefault.jpg",
+      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
     },
     {
       title: "Building a Full-Stack App with Next.js",
       publishedAt: "2024-01-12T14:15:00Z",
-      url: "https://youtube.com/watch?v=video2",
+      url: "https://youtube.com/watch?v=9bZkp7q19f0", // PSY - GANGNAM STYLE - has captions
       viewCount: 8930,
       description: "Complete guide to building a full-stack application...",
-      thumbnail: "https://img.youtube.com/vi/video2/hqdefault.jpg",
+      thumbnail: "https://img.youtube.com/vi/9bZkp7q19f0/hqdefault.jpg",
     },
     {
       title: "CSS Grid vs Flexbox: When to Use What",
       publishedAt: "2024-01-10T09:45:00Z",
-      url: "https://youtube.com/watch?v=video3",
+      url: "https://youtube.com/watch?v=YQHsXMglC9A", // Adele - Hello - has captions
       viewCount: 12_350,
       description:
         "Understanding the differences between CSS Grid and Flexbox...",
-      thumbnail: "https://img.youtube.com/vi/video3/hqdefault.jpg",
+      thumbnail: "https://img.youtube.com/vi/YQHsXMglC9A/hqdefault.jpg",
     },
     {
       title: "TypeScript Tips and Tricks for Beginners",
       publishedAt: "2024-01-08T16:20:00Z",
-      url: "https://youtube.com/watch?v=video4",
+      url: "https://youtube.com/watch?v=kJQP7kiw5Fk", // Luis Fonsi - Despacito - has captions
       viewCount: 6780,
       description: "Essential TypeScript tips every developer should know...",
-      thumbnail: "https://img.youtube.com/vi/video4/hqdefault.jpg",
+      thumbnail: "https://img.youtube.com/vi/kJQP7kiw5Fk/hqdefault.jpg",
     },
     {
       title: "Setting up a Development Environment",
       publishedAt: "2024-01-05T11:10:00Z",
-      url: "https://youtube.com/watch?v=video5",
+      url: "https://youtube.com/watch?v=YQHsXMglC9A", // Adele - Hello (duplicate for testing)
       viewCount: 4520,
       description: "Complete setup guide for your development environment...",
-      thumbnail: "https://img.youtube.com/vi/video5/hqdefault.jpg",
+      thumbnail: "https://img.youtube.com/vi/YQHsXMglC9A/hqdefault.jpg",
     },
   ];
 

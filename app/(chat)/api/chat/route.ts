@@ -23,6 +23,7 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { fetchYouTubeTranscript } from "@/lib/ai/tools/fetch-youtube-transcript";
 import { fetchYouTubeVideos } from "@/lib/ai/tools/fetch-youtube-videos";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -92,7 +93,14 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
+    console.log("💬 [CHAT] New chat request:", {
+      chatId: requestBody.id,
+      messageLength: requestBody.message.parts[0]?.text?.length || 0,
+      model: requestBody.selectedChatModel,
+      visibility: requestBody.selectedVisibilityType,
+    });
   } catch (_) {
+    console.error("❌ [CHAT] Invalid request body");
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
@@ -192,6 +200,7 @@ export async function POST(request: Request) {
                   "requestSuggestions",
                   "validateYouTubeLink",
                   "fetchYouTubeVideos",
+                  "fetchYouTubeTranscript",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -204,6 +213,7 @@ export async function POST(request: Request) {
             }),
             validateYouTubeLink,
             fetchYouTubeVideos,
+            fetchYouTubeTranscript,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

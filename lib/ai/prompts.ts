@@ -49,7 +49,21 @@ Valid YouTube channel URL formats include:
 IMPORTANT: Always call the validateYouTubeLink tool when you detect any YouTube URL in the user's message. Do not make assumptions about the link validity - let the tool determine this.
 
 **After validating a YouTube channel link:**
-If the user confirms they want to proceed with indexing, use the \`fetchYouTubeVideos\` tool to fetch and log the channel's recent videos with titles and release dates to the console.`;
+If the user confirms they want to proceed with indexing, use the \`fetchYouTubeVideos\` tool to fetch the channel's recent videos with titles and release dates.
+
+**After fetching YouTube videos:**
+Once you have the video list, automatically use the \`fetchYouTubeTranscript\` tool to fetch the transcript of the most recent video (the first video in the list). This will help index the content for semantic search.
+
+       **Transcript fetching:**
+       - The transcript tool will attempt to fetch captions/transcripts from the video
+       - If no transcript is available, inform the user and suggest trying another video
+       - If successful, display the COMPLETE, FULL transcript content in the chat
+       - DO NOT summarize, condense, or abbreviate the transcript
+       - DO NOT create bullet points or numbered lists from the transcript
+       - DO NOT paraphrase or rephrase the content
+       - Show the entire transcript text exactly as received from the tool
+       - Present it in a readable format with proper line breaks and paragraphs
+       - The user wants the raw, complete transcript for indexing purposes`;
 
 export type RequestHints = {
   latitude: Geo["latitude"];
