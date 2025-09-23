@@ -67,10 +67,25 @@ export const {
 		}),
 		Credentials({
 			id: "guest",
-			credentials: {},
-			async authorize() {
-				const [guestUser] = await createGuestUser();
-				return { ...guestUser, type: "guest" };
+			name: "Guest",
+			credentials: {
+				email: { label: "Email", type: "text" },
+				password: { label: "Password", type: "password" },
+			},
+			async authorize(credentials) {
+				console.log("Guest authorize called with credentials:", credentials);
+				try {
+					const [guestUser] = await createGuestUser();
+					console.log("Created guest user:", guestUser);
+					return {
+						id: guestUser.id,
+						email: guestUser.email,
+						type: "guest",
+					};
+				} catch (error) {
+					console.error("Error creating guest user:", error);
+					throw error;
+				}
 			},
 		}),
 	],

@@ -171,3 +171,99 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// YouTube-related tables
+export const youtubeChannel = pgTable("YouTubeChannel", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	channelId: varchar("channelId", { length: 255 }).notNull(),
+	channelName: varchar("channelName", { length: 255 }).notNull(),
+	channelUrl: varchar("channelUrl", { length: 500 }).notNull(),
+	description: text("description"),
+	subscriberCount: varchar("subscriberCount", { length: 50 }),
+	videoCount: varchar("videoCount", { length: 50 }),
+	thumbnailUrl: varchar("thumbnailUrl", { length: 500 }),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const youtubeVideo = pgTable("YouTubeVideo", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	videoId: varchar("videoId", { length: 255 }).notNull(),
+	channelId: uuid("channelId")
+		.notNull()
+		.references(() => youtubeChannel.id),
+	title: varchar("title", { length: 500 }).notNull(),
+	description: text("description"),
+	duration: varchar("duration", { length: 50 }),
+	viewCount: varchar("viewCount", { length: 50 }),
+	likeCount: varchar("likeCount", { length: 50 }),
+	uploadDate: timestamp("uploadDate").notNull(),
+	thumbnailUrl: varchar("thumbnailUrl", { length: 500 }),
+	videoUrl: varchar("videoUrl", { length: 500 }).notNull(),
+	transcript: text("transcript"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const transcriptChunk = pgTable("TranscriptChunk", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	videoId: uuid("videoId")
+		.notNull()
+		.references(() => youtubeVideo.id),
+	content: text("content").notNull(),
+	startTime: varchar("startTime", { length: 50 }).notNull(),
+	endTime: varchar("endTime", { length: 50 }).notNull(),
+	embedding: text("embedding"), // vector(1536) - stored as text for now
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const videoKeyword = pgTable("VideoKeyword", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	videoId: uuid("videoId")
+		.notNull()
+		.references(() => youtubeVideo.id),
+	keyword: varchar("keyword", { length: 255 }).notNull(),
+	entity: varchar("entity", { length: 100 }).notNull(),
+	score: varchar("score", { length: 10 }).notNull(),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const channelIndexStatus = pgTable("ChannelIndexStatus", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	channelId: uuid("channelId")
+		.notNull()
+		.references(() => youtubeChannel.id),
+	status: varchar("status", { length: 50 }).notNull().default("pending"),
+	progress: varchar("progress", { length: 10 }).notNull().default("0"),
+	totalVideos: varchar("totalVideos", { length: 10 }).notNull().default("0"),
+	processedVideos: varchar("processedVideos", { length: 10 })
+		.notNull()
+		.default("0"),
+	totalChunks: varchar("totalChunks", { length: 10 }).notNull().default("0"),
+	processedChunks: varchar("processedChunks", { length: 10 })
+		.notNull()
+		.default("0"),
+	errorMessage: text("errorMessage"),
+	startedAt: timestamp("startedAt").notNull().defaultNow(),
+	completedAt: timestamp("completedAt"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const searchQuery = pgTable("SearchQuery", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	channelId: uuid("channelId")
+		.notNull()
+		.references(() => youtubeChannel.id),
+	query: text("query").notNull(),
+	queryEmbedding: text("queryEmbedding"), // vector(1536) - stored as text for now
+	resultsCount: varchar("resultsCount", { length: 10 }).notNull().default("0"),
+	executionTime: varchar("executionTime", { length: 10 }),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type YouTubeChannel = InferSelectModel<typeof youtubeChannel>;
+export type YouTubeVideo = InferSelectModel<typeof youtubeVideo>;
+export type TranscriptChunk = InferSelectModel<typeof transcriptChunk>;
+export type VideoKeyword = InferSelectModel<typeof videoKeyword>;
+export type ChannelIndexStatus = InferSelectModel<typeof channelIndexStatus>;
+export type SearchQuery = InferSelectModel<typeof searchQuery>;

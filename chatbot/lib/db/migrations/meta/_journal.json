@@ -64,6 +64,13 @@
 			"when": 1758529647659,
 			"tag": "0008_huge_scarlet_spider",
 			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1758599008445,
+			"tag": "0010_medical_paibok",
+			"breakpoints": true
 		}
 	]
 }

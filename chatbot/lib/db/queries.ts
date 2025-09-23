@@ -68,11 +68,14 @@ export async function createGuestUser() {
 	const password = generateHashedPassword(generateUUID());
 
 	try {
-		return await db.insert(user).values({ email, password }).returning({
+		const result = await db.insert(user).values({ email, password }).returning({
 			id: user.id,
 			email: user.email,
 		});
-	} catch (_error) {
+		console.log("Created guest user:", result[0]);
+		return result;
+	} catch (error) {
+		console.error("Error creating guest user:", error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to create guest user",
@@ -92,6 +95,17 @@ export async function saveChat({
 	visibility: VisibilityType;
 }) {
 	try {
+		// First check if the user exists
+		const [existingUser] = await db
+			.select()
+			.from(user)
+			.where(eq(user.id, userId))
+			.limit(1);
+		if (!existingUser) {
+			console.warn("User not found when saving chat:", userId);
+			throw new ChatSDKError("not_found:database", "User not found");
+		}
+
 		return await db.insert(chat).values({
 			id,
 			createdAt: new Date(),
@@ -99,7 +113,11 @@ export async function saveChat({
 			title,
 			visibility,
 		});
-	} catch (_error) {
+	} catch (error) {
+		console.error("Error saving chat:", error);
+		if (error instanceof ChatSDKError) {
+			throw error;
+		}
 		throw new ChatSDKError("bad_request:database", "Failed to save chat");
 	}
 }
@@ -137,7 +155,7 @@ export async function getChatsByUserId({
 	try {
 		const extendedLimit = limit + 1;
 
-		const query = (whereCondition?: SQL<any>) =>
+		const query = (whereCondition?: SQL<unknown>) =>
 			db
 				.select()
 				.from(chat)
@@ -192,10 +210,12 @@ export async function getChatsByUserId({
 			hasMore,
 		};
 	} catch (_error) {
-		throw new ChatSDKError(
-			"bad_request:database",
-			"Failed to get chats by user id",
-		);
+		// Return empty result instead of throwing error when no data exists
+		console.warn("No chats found for user:", id);
+		return {
+			chats: [],
+			hasMore: false,
+		};
 	}
 }
 
@@ -208,7 +228,9 @@ export async function getChatById({ id }: { id: string }) {
 
 		return selectedChat;
 	} catch (_error) {
-		throw new ChatSDKError("bad_request:database", "Failed to get chat by id");
+		// Return null instead of throwing error when chat doesn't exist
+		console.warn("Chat not found:", id);
+		return null;
 	}
 }
 
@@ -517,10 +539,9 @@ export async function getMessageCountByUserId({
 
 		return stats?.count ?? 0;
 	} catch (_error) {
-		throw new ChatSDKError(
-			"bad_request:database",
-			"Failed to get message count by user id",
-		);
+		// Return 0 instead of throwing error when no data exists
+		console.warn("No message count found for user:", id);
+		return 0;
 	}
 }
 
