@@ -1,43 +1,84 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-node_modules
-.pnp
-.pnp.js
-
-# testing
-coverage
-
-# next.js
-.next/
-out/
-build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Dependencies
+node_modules/
+.pnpm-store/
 .pnpm-debug.log*
 
-# local env files
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment variables
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# turbo
-.turbo
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-.env
-.vercel
-.env*.local
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/*
+# Coverage directory
+coverage/
+*.lcov
+.nyc_output
+
+# Cache directories
+.cache
+.parcel-cache
+.eslintcache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Package manager files
+.yarn-integrity
+*.tgz
+
+# Next.js specific
+.next/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# YouTube processing temp files
+temp_transcripts/
+temp_*.vtt
+test_transcripts/
+test_subtitles/

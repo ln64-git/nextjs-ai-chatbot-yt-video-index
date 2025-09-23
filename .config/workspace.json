@@ -1,0 +1,28 @@
+{
+  "name": "youtube-indexer-chatbot",
+  "version": "1.0.0",
+  "description": "YouTube video indexing with AI chatbot interface",
+  "workspace": {
+    "packages": [
+      "chatbot",
+      "youtube-indexer"
+    ],
+    "scripts": {
+      "dev": "Start development servers",
+      "build": "Build all packages",
+      "lint": "Lint all packages",
+      "format": "Format all packages",
+      "test": "Run tests",
+      "clean": "Clean all build artifacts"
+    }
+  },
+  "development": {
+    "chatbot": {
+      "port": 3000,
+      "description": "AI chatbot interface with Next.js"
+    },
+    "youtube-indexer": {
+      "description": "YouTube video indexing and semantic search"
+    }
+  }
+}
